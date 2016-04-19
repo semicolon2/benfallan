@@ -6,7 +6,7 @@ var ballan = angular.module('ballan', ['btford.socket-io']);
 ballan.config(['$httpProvider', function($httpProvider){
 	$httpProvider.defaults.useXDomain = true;
 	$httpProvider.defaults.withCredentials = true;
-	delete $httpProvider.defaults.headers.common['x-Requested-With'];
+	delete $httpProvider.defaults.headers.common['X-Requested-With, Content-Type'];
 	$httpProvider.defaults.headers.common["Accept"] = "application/json";
 	$httpProvider.defaults.headers.common["Content-Type"] = "application/json";
 }]);
@@ -23,6 +23,9 @@ ballan.directive('drawingBoard', ['socket', function (socket) {
 			socket.on('sendDrawing', function (data) {
 				scope.drawing = data;
 			});
+			scope.clear = function () {
+				sketcher.clear();
+			}
 		}
 	}
 }]);

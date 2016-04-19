@@ -57,6 +57,10 @@ app.get('/login', function (req, res) {
   res.render('login');
 });
 
+app.get('/draw', function (req, res) {
+   res.render('draw');
+});
+
 //=== everything else? ===
 io.on('connection', function (socket) {
   socket.on('sendDrawing', function (data) {
