@@ -3,6 +3,14 @@
  */
 var ballan = angular.module('ballan', ['btford.socket-io']);
 
+ballan.config(['$httpProvider', function($httpProvider){
+	$httpProvider.defaults.useXDomain = true;
+	$httpProvider.defaults.withCredentials = true;
+	delete $httpProvider.defaults.headers.common['x-Requested-With'];
+	$httpProvider.defaults.headers.common["Accept"] = "application/json";
+	$httpProvider.defaults.headers.common["Content-Type"] = "application/json";
+}]);
+
 ballan.directive('drawingBoard', ['socket', function (socket) {
 	return {
 		templateUrl: 'partials/drawing.html',
@@ -22,6 +30,17 @@ ballan.directive('drawingBoard', ['socket', function (socket) {
 ballan.directive('myHeader', [function () {
 	return {
 		templateUrl: 'partials/header.html'
+	}
+}]);
+
+ballan.directive('loginPage', ['$http', function ($http) {
+	return {
+		templateUrl: 'partials/login.html',
+		link: function (scope) {
+			scope.login = function () {
+				$http.get('/auth/google');
+			}
+		}
 	}
 }]);
 
