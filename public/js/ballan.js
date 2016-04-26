@@ -30,19 +30,29 @@ ballan.directive('drawingBoard', ['socket', function (socket) {
 	}
 }]);
 
-ballan.directive('myHeader', [function () {
+ballan.directive('myHeader', ['loginFactory', function (loginFactory) {
 	return {
-		templateUrl: 'partials/header.html'
-	}
-}]);
-
-ballan.directive('loginPage', ['$http', function ($http) {
-	return {
-		templateUrl: 'partials/login.html',
-		
+		scope: {},
+		templateUrl: 'partials/header.html',
+		link: function (scope) {
+			scope.loggedIn = loginFactory.isLoggedIn;
+		}
 	}
 }]);
 
 ballan.factory('socket', ['socketFactory', function (socketfactory) {
 	return socketfactory();
+}]);
+
+ballan.factory('loginFactory', ['$http', function ($http) {
+	var loginFactory = {};
+	loginFactory.isLoggedIn = $http.get('auth/loggedin').success(function (user) {
+		if (user == '0') {
+			return false;
+		}
+	return true;
+	}).error(function (data) {
+		console.log('error: ' + data);
+	});
+	return loginFactory;
 }]);

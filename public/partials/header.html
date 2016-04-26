@@ -2,6 +2,8 @@
     <ul class="nav navbar-nav">
         <li><a href="/">Home</a></li>
         <li><a href="/draw">Draw</a></li>
-        <li><a href="/login">Login</a></li>
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+        <li ng-hide="loggedIn"><a href="/auth/google">Login</a></li>
     </ul>
 </nav>

@@ -91,6 +91,11 @@ app.get('/auth/google', passport.authenticate('google', {scope: ['https://www.go
 
 app.get('/auth/google/return', passport.authenticate('google', { failureRedirect: '/', successRedirect: '/draw'}));
 
+app.get('/auth/loggedin', function (req, res) {
+    res.send(req.isAuthenticated() ? req.user : '0');
+});
+
+
 //=== routes ===
 app.get('/', function (req, res) {
   res.render('index', {title: 'benfallan'});
