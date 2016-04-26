@@ -8,19 +8,25 @@ User.findOrCreate = function (profile, callback){
     mongoClient.connect(dbUrl, function (err, db){
         assert.equal(null, err);
         var usersCollection = db.collection('users');
-        var cursor = usersCollection.find( {"googleId": googleId} );
+        var cursor = usersCollection.find( {"googleId": profile.id} );
         cursor.each(function (err, doc) {
             assert.equal(err,null);
-            if  (doc != null){
+            if  (doc == null){
                 usersCollection.insertOne({
-                    "name":profile.name,
+                    "name":profile.displayName,
                     "googleid": profile.id,
-                })
-            } else {
-
+                    "email": profile.emails.value,
+                    "photo": profile.photos.value
+                });
+                db.close();
             }
+            callback(err, doc);
         });
     });
+};
+
+User.getName = function () {
+    
 };
 
 module.exports = User;

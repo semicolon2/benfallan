@@ -39,11 +39,7 @@ ballan.directive('myHeader', [function () {
 ballan.directive('loginPage', ['$http', function ($http) {
 	return {
 		templateUrl: 'partials/login.html',
-		link: function (scope) {
-			scope.login = function () {
-				$http.get('/auth/google');
-			}
-		}
+		
 	}
 }]);
 
