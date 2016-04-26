@@ -87,12 +87,15 @@ passport.use(new googleStrategy({
     });
   }
 ));
-app.get('/auth/google', passport.authenticate('google', {scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'] }));
+app.get('/auth/google', passport.authenticate('google', {scope: ['profile', 'email'] }));
 
 app.get('/auth/google/return', passport.authenticate('google', { failureRedirect: '/', successRedirect: '/draw'}));
 
 app.get('/auth/loggedin', function (req, res) {
-    res.send(req.isAuthenticated() ? req.user : '0');
+    var authenticated = req.isAuthenticated();
+	process.nextTick(function () {
+		res.send(authenticated);
+	});
 });
 
 

@@ -19,7 +19,7 @@ ballan.directive('drawingBoard', ['socket', function (socket) {
 			scope.send = function () {
 				var dataURL = sketcher.toImage();
 				socket.emit('sendDrawing', dataURL);
-			}
+			};
 			socket.on('sendDrawing', function (data) {
 				scope.drawing = data;
 			});
@@ -35,7 +35,21 @@ ballan.directive('myHeader', ['loginFactory', function (loginFactory) {
 		scope: {},
 		templateUrl: 'partials/header.html',
 		link: function (scope) {
-			scope.loggedIn = loginFactory.isLoggedIn;
+			loginFactory.isLoggedIn().success(function (response) {
+				scope.loggedIn = response;
+			}, function (error) {
+				console.log('error: ' + error);
+			});
+		}
+	}
+}]);
+
+ballan.directive('characterSheet', [function(){
+	return {
+		scope: {},
+		templateUrl: 'partials/characterSheet.html',
+		link: function () {
+			
 		}
 	}
 }]);
@@ -46,13 +60,8 @@ ballan.factory('socket', ['socketFactory', function (socketfactory) {
 
 ballan.factory('loginFactory', ['$http', function ($http) {
 	var loginFactory = {};
-	loginFactory.isLoggedIn = $http.get('auth/loggedin').success(function (user) {
-		if (user == '0') {
-			return false;
-		}
-	return true;
-	}).error(function (data) {
-		console.log('error: ' + data);
-	});
+	loginFactory.isLoggedIn = function(){
+		return $http.get('/auth/loggedin');
+	};
 	return loginFactory;
 }]);
