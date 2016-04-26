@@ -4,6 +4,8 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var passport = require('passport');
 var googleStrategy = require('passport-google-oauth20').Strategy;
+var mongodb = require('mongodb').MongoClient;
+var assert = require('assert');
 
 //=== env vars/ other vars ===
 var port = process.env.PORT || 3000;
@@ -28,7 +30,7 @@ passport.use(new googleStrategy({
     clientSecret: googleClientSecret,
     callbackURL: "http://localhost:3000/auth/google/return"
   }, function (accessToken, refreshToken, profile, cb) {
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+    User.findOrCreate(profile, function (err, user) {
       return cb(err, user);
     });
   }

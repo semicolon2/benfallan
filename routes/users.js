@@ -1,9 +1,26 @@
 var express = require('express');
-var router = express.Router();
+var mongoClient = require('mongodb').MongoClient;
+var assert = require('assert');
+var dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/benfallan';
+var User = {};
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+User.findOrCreate = function (profile, callback){
+    mongoClient.connect(dbUrl, function (err, db){
+        assert.equal(null, err);
+        var usersCollection = db.collection('users');
+        var cursor = usersCollection.find( {"googleId": googleId} );
+        cursor.each(function (err, doc) {
+            assert.equal(err,null);
+            if  (doc != null){
+                usersCollection.insertOne({
+                    "name":profile.name,
+                    "googleid": profile.id,
+                })
+            } else {
 
-module.exports = router;
+            }
+        });
+    });
+};
+
+module.exports = User;
