@@ -133,7 +133,6 @@ app.post('/drawing/save', isLoggedIn, isAdmin, function (req, res) {
 	Drawing.findOne({'name': req.body.name}, function (err, drawing) {
 		if (err){
 			res.send(err);
-			return;
 		}
 		if (drawing)
 			res.send('drawing with that name already exists');
