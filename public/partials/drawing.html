@@ -1,4 +1,13 @@
-<canvas id="mySketcher" width="500px" height="500px"></canvas>
-<button ng-click="send()">Send</button>
-<button ng-click="clear()">Clear</button>
+<div ng-show="admin" class="col-sm-6">
+    <canvas id="mySketcher" width="500px" height="500px" ng-mouseup="send()"></canvas>
+    <div class="form-group">
+        <div class="input-group">
+            <input type="text" class="form-control" ng-model="saveAs" placeholder="Save As...">
+            <span class="input-group-addon"> <a ng-click="save()">Save</a></span>
+        </div>
+        <button class="btn btn-default" ng-click="clear()">Clear</button>
+    </div>
+</div>
+<div ng-hide="admin" class="col-sm-6">
 <img src="{{drawing}}">
+</div>

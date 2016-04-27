@@ -11,20 +11,32 @@ ballan.config(['$httpProvider', function($httpProvider){
 	$httpProvider.defaults.headers.common["Content-Type"] = "application/json";
 }]);
 
-ballan.directive('drawingBoard', ['socket', function (socket) {
+ballan.directive('drawingBoard', ['socket', 'loginFactory', 'drawingFactory', function (socket, loginFactory, drawingFactory) {
 	return {
 		templateUrl: 'partials/drawing.html',
 		link: function (scope) {
 			var sketcher = atrament('#mySketcher');
+			var dataURL = function () {
+				return sketcher.toImage();
+			};
 			scope.send = function () {
-				var dataURL = sketcher.toImage();
-				socket.emit('sendDrawing', dataURL);
+				socket.emit('sendDrawing', dataURL());
 			};
 			socket.on('sendDrawing', function (data) {
 				scope.drawing = data;
 			});
 			scope.clear = function () {
 				sketcher.clear();
+				socket.emit('sendDrawing', dataURL());
+			};
+			loginFactory.userLevel().success(function(response){
+				if (response == 'admin')
+					scope.admin = true;
+				else
+					scope.admin = false;
+			});
+			scope.save = function(){
+				drawingFactory.saveDrawing(scope.saveAs, dataURL());
 			}
 		}
 	}
@@ -37,8 +49,6 @@ ballan.directive('myHeader', ['loginFactory', function (loginFactory) {
 		link: function (scope) {
 			loginFactory.isLoggedIn().success(function (response) {
 				scope.loggedIn = response;
-			}, function (error) {
-				console.log('error: ' + error);
 			});
 		}
 	}
@@ -63,5 +73,20 @@ ballan.factory('loginFactory', ['$http', function ($http) {
 	loginFactory.isLoggedIn = function(){
 		return $http.get('/auth/loggedin');
 	};
+	loginFactory.userLevel = function () {
+		return $http.get('auth/userlevel');
+	};
 	return loginFactory;
+}]);
+
+ballan.factory('drawingFactory', ['$http', function ($http) {
+	var drawingFactory = {};
+	drawingFactory.saveDrawing = function (name, drawing) {
+		return $http.post('/drawing/save', {name: name, drawing: drawing});
+	};
+	drawingFactory.getDrawing = function () {
+		
+	};
+
+	return drawingFactory;
 }]);

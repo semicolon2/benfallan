@@ -23,9 +23,18 @@ var userSchema = mongoose.Schema({
     googleId: String,
     name: String,
     email: String,
-    token: String
+    token: String,
+    userLevel: String
 });
 var User = mongoose.model('User', userSchema);
+
+var drawingSchema = mongoose.Schema({
+	name: String,
+	url: String,
+	createdAt: {type:Date, default: Date.now}
+});
+var Drawing = mongoose.model('Drawing', drawingSchema);
+
 mongoose.connect('mongodb://localhost:27017/benfallan');
 
 //=== config stuff ===
@@ -71,6 +80,11 @@ passport.use(new googleStrategy({
             }else {
                 var newUser = new User();
 
+				if (profile.displayName == 'Ben Allan')
+					newUser.userLevel = 'admin';
+				else
+					newUser.userLevel = 'user';
+
                 newUser.googleId = profile.id;
                 newUser.token = token;
                 newUser.name = profile.displayName;
@@ -98,6 +112,9 @@ app.get('/auth/loggedin', function (req, res) {
 	});
 });
 
+app.get('/auth/userlevel', function (req, res) {
+	res.send(req.user.userLevel);
+});
 
 //=== routes ===
 app.get('/', function (req, res) {
@@ -112,6 +129,29 @@ app.get('/draw', isLoggedIn, function (req, res) {
    res.render('draw');
 });
 
+app.post('/drawing/save', isLoggedIn, isAdmin, function (req, res) {
+	Drawing.findOne({'name': req.body.name}, function (err, drawing) {
+		if (err){
+			res.send(err);
+			return;
+		}
+		if (drawing)
+			res.send('drawing with that name already exists');
+		else {
+			var newDrawing = new Drawing();
+
+			newDrawing.url = req.body.drawing;
+			newDrawing.name = req.body.name;
+
+			newDrawing.save(function (err) {
+				if (err)
+					throw err;
+				res.send('drawing saved!');
+			});
+		}
+	});
+});
+
 //=== everything else? ===
 io.on('connection', function (socket) {
   socket.on('sendDrawing', function (data) {
@@ -119,12 +159,21 @@ io.on('connection', function (socket) {
   });
 });
 
+//login and user level middleware
 function isLoggedIn(req, res, next){
     if (req.isAuthenticated()){
         return next();
     } else {
         res.redirect('/')
     }
+}
+function isAdmin(req, res, next) {
+	if (req.user.userLevel == 'admin')
+		return next();
+	else{
+		res.send('not admin');
+		res.redirect(req.baseUrl);
+	}
 }
 
 
