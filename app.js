@@ -35,6 +35,82 @@ var drawingSchema = mongoose.Schema({
 });
 var Drawing = mongoose.model('Drawing', drawingSchema);
 
+var characterSchema = mongoose.Schema({
+    userId: String,
+    info: {
+		level: {type: Number, default: 1},
+		xp: {type: Number, default: 0},
+		name: String,
+		race: String,
+		class: String,
+		background: String,
+		alignment: String,
+		traits: String,
+		ideals: String,
+		bonds: String,
+		flaws: String,
+		backstory: String,
+		notes: {type: String, default: ""}
+	},
+	stats: {
+		str: Number,
+		dex: Number,
+		con: Number,
+		int: Number,
+		wis: Number,
+		cha: Number,
+		proficiency: Number,
+		speed: Number,
+		ac: Number,
+		initiative: Number,
+		inspiration: Number,
+		hp: Number,
+		hpMax: Number,
+		hpTemp: Number,
+		hitDie: {type: Number, default: 1},
+		hitDieType: Number,
+		hitDieMax: {type: Number, default: 1},
+		saves: {
+			str: {'prof': Boolean, 'save': Number},
+			dex: {'prof': Boolean, 'save': Number},
+			con: {'prof': Boolean, 'save': Number},
+			int: {'prof': Boolean, 'save': Number},
+			wis: {'prof': Boolean, 'save': Number},
+			cha: {'prof': Boolean, 'save': Number}
+		},
+		skills: {
+			acrobatics: {'prof': Boolean, 'skill': Number},
+			animalHandling: {'prof': Boolean, 'skill': Number},
+			arcana: {'prof': Boolean, 'skill': Number},
+			athletics: {'prof': Boolean, 'skill': Number},
+			deception: {'prof': Boolean, 'skill': Number},
+			history: {'prof': Boolean, 'skill': Number},
+			insight: {'prof': Boolean, 'skill': Number},
+			intimidation: {'prof': Boolean, 'skill': Number},
+			investigation: {'prof': Boolean, 'skill': Number},
+			medicine: {'prof': Boolean, 'skill': Number},
+			nature: {'prof': Boolean, 'skill': Number},
+			perception: {'prof': Boolean, 'skill': Number},
+			performance: {'prof': Boolean, 'skill': Number},
+			persuasion: {'prof': Boolean, 'skill': Number},
+			religion: {'prof': Boolean, 'skill': Number},
+			sleightOfHand: {'prof': Boolean, 'skill': Number},
+			stealth: {'prof': Boolean, 'skill': Number},
+			survival: {'prof': Boolean, 'skill': Number}
+		},
+		passivePerception: Number
+	},
+	abilities: {'name': String, 'desc': String},
+	equipment: {
+		armour: [{'equipped': Boolean, 'ac': Number, 'desc': String, 'weight': Number}],
+		weapons: [{'equipped': Boolean, 'isRanged': Boolean, 'range': Number, 'dmg': String, 'dmgType': String, 'isVersatile': Boolean, 'dmgVersatile': String, 'desc': String, 'weight': Number}],
+		other: [String]
+	},
+	spells: [String],
+	deathSaves: {'successes': Number, 'failures': Number}
+});
+var Character = mongoose.model('Character', characterSchema);
+
 mongoose.connect('mongodb://localhost:27017/benfallan');
 
 //=== config stuff ===
@@ -148,6 +224,66 @@ app.post('/drawing/save', isLoggedIn, isAdmin, function (req, res) {
 				res.send('drawing saved!');
 			});
 		}
+	});
+});
+
+//character controllers
+app.post('/char/save', isLoggedIn, function (req, res) {
+	console.log(req.body);
+	Character.findOne({'userId': req.user.id, 'id': req.body.character.id}, function (err, character) {
+		if (err){
+			res.send(err);
+			return;
+		}
+		if (character){
+			character.update(req.body.character);
+			res.send('character updated!');
+		} else {
+			var newCharacter = new Character(req.body.character);
+
+			newCharacter.save(function (err) {
+				if (err)
+					throw err;
+				res.send('saved!');
+			});
+		}
+	});
+});
+
+app.get('/char/get/:id', isLoggedIn, function (req, res){
+	Character.findById(req.params.id, function (err, character) {
+		if (err){
+			res.send(err);
+			return;
+		}
+		if (character)
+			res.send(character);
+		else
+			res.send('cannot find character');
+	});
+});
+app.get('/char/getall/', isLoggedIn, isAdmin, function (req, res) {
+	Character.find({}, 'id name', function (err, characters){
+		if (err){
+			res.send(err);
+			return;
+		}
+		if (characters)
+			res.send(characters);
+		else 
+			res.send('no characters');
+	});
+});
+app.get('/char/getuserchars/', isLoggedIn, function (req, res) {
+	Character.find({'userId': req.user.id}, 'id name', function (err, characters){
+		if (err){
+			res.send(err);
+			return;
+		}
+		if (characters)
+			res.send(characters);
+		else 
+			res.send('no characters');
 	});
 });
 

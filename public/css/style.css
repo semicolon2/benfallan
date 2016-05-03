@@ -1,0 +1,35 @@
+.no-spinner input[type=number]::-webkit-inner-spin-button,
+.no-spinner input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+.form-control[readonly]{
+    background-color: white;
+}
+
+.char-content {
+    padding-top: 15px;
+}
+
+.char-content textarea {
+    resize: none;
+    overflow-x: hidden;
+    font-size: smaller;
+}
+
+.fluff div {
+    padding: 0 15px 0 0;
+}
+.char-align {
+    padding-left: 0;
+}
+.num-input-pad {
+    padding: 6px 6px 6px 9px;
+}
+.seperator{
+    height: 59px;
+    border-bottom: 1px solid #e3e3e3;
+    padding-top: 6px;
+}
