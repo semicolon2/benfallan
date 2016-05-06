@@ -1,19 +1,88 @@
-<h3>Bobby</h3> <!--ng-bind="character.info.name"-->
+<h3 ng-bind="character.info.name"></h3>
 <ul class="nav nav-tabs">
-    <li role="presentation" class="active"><a href="#info" aria-controls="info" role="tab" data-toggle="tab">Info</a></li>
+    <li role="presentation" class="active"><a href="#main" aria-controls="info" role="tab" data-toggle="tab">Main</a></li>
+    <li role="presentation"><a href="#info" aria-controls="info" role="tab" data-toggle="tab">Info</a></li>
+    <li role="presentation"><a href="#fluff" aria-controls="appearance" role="tab" data-toggle="tab">Fluff</a></li>
     <li role="presentation"><a href="#stats" aria-controls="stats" role="tab" data-toggle="tab">Skills/Stats</a></li>
+    <li role="presentation"><a href="#abilities" aria-controls="abilities" role="tab" data-toggle="tab">Abilities</a></li>
     <li role="presentation"><a href="#equipment" aria-controls="equipment" role="tab" data-toggle="tab">Equipment</a></li>
+    <li role="presentation"><a href="#spells" aria-controls="spells" role="tab" data-toggle="tab">Spells</a></li>
+
 
     <li role="presentation" class="dropdown navbar-right"><a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Character<span class="caret"></span></a>
         <ul class="dropdown-menu">
-            <li ng-repeat="character in characterList" ng-click="charId = character.id" ng-bind="character.info.name"></li>
+            <li ng-repeat="character in characterList"><a ng-click="selectChar(character._id)" ng-bind="character.info.name"></a></li>
+            <li><a href="#"  ng-click="selectChar(0)">New Character</a></li>
         </ul>
     </li>
-    <li role="presentation" class="navbar-right"><a href="#" ng-click="updateChar()">Save Changes</a></li>
+    <li role="presentation" class="navbar-right no-hover"><a href="#" ng-click="updateChar()">Save</a></li>
 </ul>
 
 <form class="form-horizontal tab-content char-content">
-    <div role="tabpanel" class="tab-pane active" id="info">
+
+    <!--//==================================================================-->
+    <!--//-->
+    <!--//=================   MAIN PANEL   =================================-->
+    <!--//-->
+    <!--//==================================================================-->
+
+    <div role="tabpanel" class="tab-pane active" id="main">
+        <div class="form-group no-spinner">
+            <label class="col-sm-2 control-label">
+                <input type="checkbox" ng-model="shieldEquipped"> Shield Equipped
+            </label>
+            <div class="col-sm-2">
+                <label class="control-label">Armour Class:</label>
+                <input type="number" class="form-control" ng-value="ac()" readonly>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Initiative Mod:</label>
+                <input type="number" class="form-control" ng-value="abilityMod(character.stats.dex)" readonly>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Speed:</label>
+                <input type="number" class="form-control" ng-model="character.stats.speed">
+            </div>
+            <div class="col-sm-3">
+                <label class="control-label">Passive Perception:</label>
+                <input type="number" class="form-control" ng-value="passivePerception()" readonly>
+            </div>
+        </div>
+        <div class="form-group no-spinner">
+            <div class="col-sm-1">
+                <label class="control-label">HP:</label>
+                <div class="hp-line"><input type="number" class="form-control" ng-model="character.stats.hp"></div>
+                <p class="max-hp">{{character.stats.hpMax}}</p>
+            </div>
+            <div class="col-sm-1">
+                <label class="control-label">Temp:</label>
+                <input type="number" class="form-control temp-hp" ng-model="character.stats.hpTemp">
+            </div>
+            <div class="col-sm-1">
+                <label class="control-label">HD:</label>
+                <div class="hp-line"><input type="number" class="form-control" ng-model="character.stats.hpTemp"></div>
+                <p class="max-hp">{{character.stats.hitDieMax}}</p>
+            </div>
+        </div>
+        <div class="form-group">
+            <ul class="list-unstyled">
+                <div class="form-group no-spinner">
+                    <li ng-repeat="weapon in character.equipment.weapons" class="seperator col-sm-6" ng-show="weapon.equipped">
+                        <label class="control-label" ng-bind="weapon.name"></label>
+                        <label class="control-label" ng-bind="attacks(weapon)"></label>
+                    </li>
+                </div>
+            </ul>
+        </div>
+    </div>
+
+    <!--//==================================================================-->
+    <!--//-->
+    <!--//=================   INFO PANEL   =================================-->
+    <!--//-->
+    <!--//==================================================================-->
+
+    <div role="tabpanel" class="tab-pane" id="info">
         <div class="form-group no-spinner">
             <label for="char-name" class="col-sm-1 control-label">Name:</label>
             <div class="col-sm-2">
@@ -25,7 +94,7 @@
             </div>
             <label for="char-level" class="col-sm-1 control-label">Level:</label>
             <div class="col-sm-1">
-                <input type="number" class="form-control num-input-pad" id="char-level" ng-model="character.info.level" readonly>
+                <input type="number" class="form-control num-input-pad" id="char-level" ng-model="character.info.level">
             </div>
             <label for="char-xp" class="col-sm-1 control-label">XP:</label>
             <div class="col-sm-2">
@@ -40,7 +109,7 @@
             </div>
             <label for="char-align" class="col-sm-1 control-label char-align">Alignment:</label>
             <div class="col-sm-2">
-                <input type="text" class="form-control" id="char-align" ng-model="character.info.alignment">
+                <input type="text" class="form-control num-input-pad" id="char-align" ng-model="character.info.alignment">
             </div>
             <label for="char-background" class="col-sm-2 control-label">Background:</label>
             <div class="col-sm-3">
@@ -48,97 +117,482 @@
             </div>
         </div>
 
+        <div class="form-group no-spinner">
+            <label class="control-label col-sm-1">Hit Die:</label>
+            <div class="col-sm-2">
+                <input type="text" class="form-control" ng-model="character.stats.hitDieType">
+            </div>
+            <label class="control-label col-sm-2">Max Hit Die:</label>
+            <div class="col-sm-1">
+                <input type="number" class="form-control" ng-model="character.stats.hitDieMax">
+            </div>
+            <label class="control-label col-sm-1">Max HP:</label>
+            <div class="col-sm-1">
+                <input type="number" class="form-control" ng-model="character.stats.hpMax">
+            </div>
+            <label class="control-label col-sm-2">Proficiency:</label>
+            <div class="col-sm-1">
+                <input type="number" class="form-control" ng-model="character.stats.proficiency">
+            </div>
+        </div>
+    </div>
+
+    <!--//==================================================================-->
+    <!--//-->
+    <!--//=================   FLUFF PANEL   ================================-->
+    <!--//-->
+    <!--//==================================================================-->
+
+    <div role="tabpanel" class="tab-pane" id="fluff">
+        <div class="form-group no-spinner">
+            <div class="col-sm-2">
+                <label class="control-label">Age:</label>
+                <input type="number" class="form-control num-input-pad" ng-model="character.info.appearance.age">
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Height:</label>
+                <input type="text" class="form-control num-input-pad" ng-model="character.info.appearance.height">
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Weight:</label>
+                <input type="text" class="form-control num-input-pad" ng-model="character.info.appearance.weight">
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Eyes:</label>
+                <input type="text" class="form-control num-input-pad" ng-model="character.info.appearance.eyes">
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Skin:</label>
+                <input type="text" class="form-control num-input-pad" ng-model="character.info.appearance.skin">
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Hair:</label>
+                <input type="text" class="form-control num-input-pad" ng-model="character.info.appearance.hair">
+            </div>
+        </div>
         <div class="form-group">
-            <label for="char-traits" class="col-sm-2 control-label">Traits:</label>
-            <div class="col-sm-4">
+            <div class="col-sm-6">
+                <label for="char-traits" class="control-label">Traits:</label>
+
                 <textarea class="form-control" id="char-traits" ng-model="character.info.traits" rows="5"></textarea>
             </div>
-            <label for="char-ideals" class="col-sm-2 control-label">Ideals:</label>
-            <div class="col-sm-4">
+            <div class="col-sm-6">
+                <label for="char-ideals" class="control-label">Ideals:</label>
                 <textarea class="form-control" id="char-ideals" ng-model="character.info.ideals" rows="5"></textarea>
             </div>
         </div>
 
         <div class="form-group">
-            <label for="char-bonds" class="col-sm-2 control-label">Bonds:</label>
-            <div class="col-sm-4">
+            <div class="col-sm-6">
+                <label for="char-bonds" class="control-label">Bonds:</label>
                 <textarea class="form-control" id="char-bonds" ng-model="character.info.bonds" rows="5"></textarea>
             </div>
-            <label for="char-flaws" class="col-sm-2 control-label">Flaws:</label>
-            <div class="col-sm-4">
+            <div class="col-sm-6">
+                <label for="char-flaws" class="control-label">Flaws:</label>
                 <textarea class="form-control" id="char-flaws" ng-model="character.info.flaws" rows="5"></textarea>
             </div>
         </div>
 
         <div class="form-group">
-            <label for="char-backstory" class="col-sm-2 control-label">Backstory:</label>
-            <div class="col-sm-10">
+            <div class="col-sm-12">
+                <label for="char-backstory" class="control-label">Backstory:</label>
                 <textarea class="form-control" id="char-backstory" ng-model="character.info.backstory" rows="5"></textarea>
             </div>
-            <label for="char-notes" class="col-sm-2 control-label">Notes:</label>
-            <div class="col-sm-10">
+            <div class="col-sm-12">
+                <label for="char-notes" class="control-label">Notes:</label>
                 <textarea class="form-control" id="char-notes" ng-model="character.info.notes" rows="5"></textarea>
             </div>
         </div>
     </div>
 
+    <!--//==================================================================-->
+    <!--//-->
+    <!--//=================   STATS PANEL   ================================-->
+    <!--//-->
+    <!--//==================================================================-->
+
     <div role="tabpanel" class="tab-pane" id="stats">
+        <h4>Abilities</h4>
         <div class="form-group no-spinner">
-            <label for="strength" class="col-sm-1 control-label">Str</label>
-            <div class="col-sm-1">
+            <div class="col-sm-2">
+                <label for="strength" class="control-label">Strength</label>
                 <input type="number" class="form-control num-input-pad" id="strength" ng-model="character.stats.str">
-                <p>mod: {{skillMod(character.stats.str)}}</p>
+                <label>mod: {{abilityMod(character.stats.str)}}</label>
             </div>
-            <label for="dexterity" class="col-sm-1 control-label">Dex</label>
-            <div class="col-sm-1">
+            <div class="col-sm-2">
+                <label for="dexterity" class="control-label">Dexterity</label>
                 <input type="number" class="form-control num-input-pad" id="dexterity" ng-model="character.stats.dex">
-                <p>mod: {{skillMod(character.stats.dex)}}</p>
+                <label>mod: {{abilityMod(character.stats.dex)}}</label>
             </div>
-            <label for="constitution" class="col-sm-1 control-label">Con</label>
-            <div class="col-sm-1">
+            <div class="col-sm-2">
+                <label for="constitution" class="control-label">Constitution</label>
                 <input type="number" class="form-control num-input-pad" id="constitution" ng-model="character.stats.con">
-                <p>mod: {{skillMod(character.stats.con)}}</p>
+                <label>mod: {{abilityMod(character.stats.con)}}</label>
             </div>
-            <label for="intelligence" class="col-sm-1 control-label">Int</label>
-            <div class="col-sm-1">
+            <div class="col-sm-2">
+                <label for="intelligence" class="control-label">Intelligence</label>
                 <input type="number" class="form-control num-input-pad" id="intelligence" ng-model="character.stats.int">
-                <p>mod: {{skillMod(character.stats.int)}}</p>
+                <label>mod: {{abilityMod(character.stats.int)}}</label>
             </div>
-            <label for="wisdom" class="col-sm-1 control-label">Wis</label>
-            <div class="col-sm-1">
+            <div class="col-sm-2">
+                <label for="wisdom" class="control-label">Wisdom</label>
                 <input type="number" class="form-control num-input-pad" id="wisdom" ng-model="character.stats.wis">
-                <p>mod: {{skillMod(character.stats.wis)}}</p>
+                <label>mod: {{abilityMod(character.stats.wis)}}</label>
             </div>
-            <label for="charisma" class="col-sm-1 control-label">Cha</label>
-            <div class="col-sm-1">
+            <div class="col-sm-2">
+                <label for="charisma" class="control-label">Charisma</label>
                 <input type="number" class="form-control num-input-pad" id="charisma" ng-model="character.stats.cha">
-                <p>mod: {{skillMod(character.stats.cha)}}</p>
+                <label>mod: {{abilityMod(character.stats.cha)}}</label>
+            </div>
+        </div>
+        <h4>Saves</h4>
+        <div class="form-group">
+            <div class="col-sm-2">
+                <label class="control-label prof-padding">
+                    <input type="checkbox" ng-model="character.stats.saves.str"> 
+                </label>
+                <label>Str Save: {{abilityMod(character.stats.str) + checkSaveProf('str')}}</label>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label prof-padding">
+                    <input type="checkbox" ng-model="character.stats.saves.dex"> 
+                </label>
+                <label>Dex Save: {{abilityMod(character.stats.dex) + checkSaveProf('dex')}}</label>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label prof-padding">
+                    <input type="checkbox" ng-model="character.stats.saves.con"> 
+                </label>
+                <label>Con Save: {{abilityMod(character.stats.con) + checkSaveProf('con')}}</label>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label prof-padding">
+                    <input type="checkbox" ng-model="character.stats.saves.int"> 
+                </label>
+                <label>Int Save: {{abilityMod(character.stats.int) + checkSaveProf('int')}}</label>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label prof-padding">
+                    <input type="checkbox" ng-model="character.stats.saves.wis"> 
+                </label>
+                <label>Wis Save: {{abilityMod(character.stats.wis) + checkSaveProf('wis')}}</label>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label prof-padding">
+                    <input type="checkbox" ng-model="character.stats.saves.cha"> 
+                </label>
+                <label>Cha Save: {{abilityMod(character.stats.cha) + checkSaveProf('cha')}}</label>
+            </div>
+        </div>
+
+        <h4>Skills</h4>
+        <div class="form-group">
+            <ul class="col-sm-4 list-unstyled">
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.acrobatics"> 
+                    </label>
+                    <label>Acrobatics: {{abilityMod(character.stats.dex) + checkSkillProf('acrobatics')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.arcana"> 
+                    </label>
+                    <label>Arcana: {{abilityMod(character.stats.int) + checkSkillProf('arcana')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.athletics"> 
+                    </label>
+                    <label>Athletics: {{abilityMod(character.stats.str) + checkSkillProf('athletics')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.deception"> 
+                    </label>
+                    <label>Deception: {{abilityMod(character.stats.cha) + checkSkillProf('deception')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.animalHandling"> 
+                    </label>
+                    <label>Animal Handling: {{abilityMod(character.stats.wis) + checkSkillProf('animalHandling')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.religion"> 
+                    </label>
+                    <label>Religion: {{abilityMod(character.stats.int) + checkSkillProf('religion')}}</label>
+                </li>
+            </ul>
+            <ul class="col-sm-4 list-unstyled">
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.sleightOfHand"> 
+                    </label>
+                    <label>Sleight Of Hand: {{abilityMod(character.stats.wis) + checkSkillProf('sleightOfHand')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.persuasion"> 
+                    </label>
+                    <label>Persuasion: {{abilityMod(character.stats.cha) + checkSkillProf('persuasion')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.performance"> 
+                    </label>
+                    <label>Performance: {{abilityMod(character.stats.cha) + checkSkillProf('performance')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.perception"> 
+                    </label>
+                    <label>Perception: {{abilityMod(character.stats.wis) + checkSkillProf('perception')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.nature"> 
+                    </label>
+                    <label>Nature: {{abilityMod(character.stats.int) + checkSkillProf('nature')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.investigation"> 
+                    </label>
+                    <label>Investigation: {{abilityMod(character.stats.int) + checkSkillProf('investigation')}}</label>
+                </li>
+            </ul>
+            <ul class="col-sm-4 list-unstyled">
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.stealth"> 
+                    </label>
+                    <label>Stealth: {{abilityMod(character.stats.cha) + checkSkillProf('stealth')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.medicine"> 
+                    </label>
+                    <label>Medicine: {{abilityMod(character.stats.wis) + checkSkillProf('medicine')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.intimidation"> 
+                    </label>
+                    <label>Intimidation: {{abilityMod(character.stats.cha) + checkSkillProf('intimidation')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.insight"> 
+                    </label>
+                    <label>Insight: {{abilityMod(character.stats.wis) + checkSkillProf('insight')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.history"> 
+                    </label>
+                    <label>History: {{abilityMod(character.stats.int) + checkSkillProf('history')}}</label>
+                </li>
+                <li class="seperator">
+                    <label class="control-label prof-padding">
+                        <input type="checkbox" ng-model="character.stats.skills.survival"> 
+                    </label>
+                    <label>Survival: {{abilityMod(character.stats.cha) + checkSkillProf('survival')}}</label>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!--//==================================================================-->
+    <!--//-->
+    <!--//=================   ABILITIES PANEL   ============================-->
+    <!--//-->
+    <!--//==================================================================-->
+
+    <div role="tabpanel" class="tab-pane" id="abilities">
+        <div class="form-group">
+            <div class="col-sm-6">
+                <label class="control-label">Feats & Proficiencies</label>
+                <textarea class="form-control" rows="6" ng-model="character.feats"></textarea>
+            </div>
+            <div class="col-sm-6">
+                <button class="btn btn-default" ng-click="newAbility()">Add Ability</button>
+            </div>
+        </div>
+        <div class="col-sm-6 row seperator" ng-repeat="ability in character.abilities">
+            <label class="control-label col-sm-3">Name:</label>
+            <div class="col-sm-9 ability-list">
+                <input type="text" class="form-control" ng-model="ability.name">
+            </div>
+            <div class="col-sm-12 ability-list">
+                <textarea class="form-control" ng-model="ability.desc" rows="3"></textarea>
             </div>
         </div>
     </div>
 
+    <!--//==================================================================-->
+    <!--//-->
+    <!--//=================   EQUIPMENT PANEL   ============================-->
+    <!--//-->
+    <!--//==================================================================-->
+
     <div role="tabpanel" class="tab-pane" id="equipment">
+        <ul class="nav nav-pills">
+            <li role="presentation" class="new-item"><a href="#" ng-click="newArmour()">New Armour</a></li>
+            <li role="presentation" class="new-item"><a href="#" ng-click="newWeapon()">New Weapon</a></li>
+            <li role="presentation" class="new-item"><a href="#" ng-click="newItem()">New Item</a></li>
+        </ul>
+        <div class="form-group coinage">
+            <div class="col-sm-2">
+                <label class="control-label">Weight:</label>
+                <input type="number" class="form-control num-input-pad" ng-value="totalWeight()" readonly>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Copper:</label>
+                <input type="number" class="form-control num-input-pad" ng-model="character.equipment.coin.cp">
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Silver:</label>
+                <input type="number" class="form-control num-input-pad" ng-model="character.equipment.coin.sp">
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Gold:</label>
+                <input type="number" class="form-control num-input-pad" ng-model="character.equipment.coin.gp">
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Platinum:</label>
+                <input type="number" class="form-control num-input-pad" ng-model="character.equipment.coin.pp">
+            </div>
+        </div>
         <ul class="list-unstyled">
             <h4>Armour</h4>
             <li ng-repeat="armour in character.equipment.armour" class="seperator">
-                <div class="form-group no-spinner">
-                    <label class="col-sm-2">
-                        <input type="checkbox" ng-model="armour.equipped"> Equipped
+                <div class="form-group">
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" ng-model="armour.name" placeholder="name...">
+                    </div>
+                </div>
+                <div class="form-group no-spinner no-bottom-margin">
+                    <label class="col-sm-2 control-label">
+                        <input type="checkbox" ng-model="armour.equipped" ng-click="armourEquip($index, character.equipment.armour)"> Equipped
                     </label>
-                    <label class="col-sm-1 control-label">AC+:</label>
-                    <div class="col-sm-1">
+                    <div class="col-sm-2 dropdown">
+                        <button class="btn btn-default dropdown-toggle form-control" type="button" data-toggle="dropdown" ng-bind="armour.type"></button>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" ng-click="armour.type = 'light'">light</a></li>
+                            <li><a href="#" ng-click="armour.type = 'medium'">medium</a></li>
+                            <li><a href="#" ng-click="armour.type = 'heavy'">heavy</a></li>
+                        </ul>
+                    </div>
+                    <label class="control-label col-sm-1">AC+:</label>
+                    <div class="col-sm-2">
                         <input type="number" class="form-control num-input-pad" ng-model="armour.ac">
                     </div>
-                    <label class="col-sm-1 control-label">weight:</label>
-                    <div class="col-sm-1">
+                    <label class="control-label col-sm-1">weight:</label>
+                    <div class="col-sm-2">
                         <input type="number" class="form-control num-input-pad" ng-model="armour.weight">
                     </div>
-                    <label class="col-sm-2 control-label">Description:</label>
-                    <div class="col-sm-4">
+                </div>
+                <div class="form-group no-spinner">
+                    <div class="col-sm-2" ng-show="armour.type == 'heavy'">
+                        <label class="control-label">Required Str:</label>
+                        <input type="number" class="form-control" ng-model="armour.str">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="control-label">Description:</label>
                         <textarea class="form-control" ng-model="armour.desc" rows="2"></textarea>
                     </div>
                 </div>
             </li>
         </ul>
+
+        <ul class="list-unstyled">
+            <h4>Weapons</h4>
+            <li ng-repeat="weapon in character.equipment.weapons" class="seperator">
+                <div class="form-group">
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control" ng-model="weapon.name" placeholder="name...">
+                    </div>
+                    <label class="col-sm-2 control-label">
+                        <input type="checkbox" ng-model="weapon.isRanged"> Ranged?
+                    </label>
+                    <label class="col-sm-2 control-label">
+                        <input type="checkbox" ng-model="weapon.isVersatile"> Versatile?
+                    </label>
+                    <label class="col-sm-2 control-label">
+                        <input type="checkbox" ng-model="weapon.proficiency"> Proficiency
+                    </label>
+                </div>
+                <div class="form-group no-spinner no-bottom-margin">
+                    <label class="col-sm-2 control-label">
+                        <input type="checkbox" ng-model="weapon.equipped"> Equipped
+                    </label>
+                    <label class="col-sm-2 control-label">
+                        <input type="checkbox" ng-model="weapon.finesse"> Finesse?
+                    </label>
+                    <div class="col-sm-2">
+                        <label class="control-label">Damage:</label>
+                        <input type="text" class="form-control" ng-model="weapon.dmg">
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="control-label">Damage Type:</label>
+                        <input type="text" class="form-control" ng-model="weapon.dmgType">
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="control-label">weight:</label>
+                        <input type="number" class="form-control num-input-pad" ng-model="weapon.weight">
+                    </div>
+                </div>
+                <div class="form-group no-spinner">
+                    <div ng-show="weapon.isRanged">
+                        <div class="col-sm-3">
+                            <label class="control-label">Range:</label>
+                            <input type="text" class="form-control" ng-model="weapon.range">
+                        </div>
+                    </div>
+                    <div ng-show="weapon.isVersatile">
+                        <div class="col-sm-3">
+                            <label class="control-label">2Hand:</label>
+                            <input type="text" class="form-control" ng-model="weapon.dmgVersatile">
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="control-label">Description:</label>
+                        <textarea class="form-control" ng-model="weapon.desc" rows="2"></textarea>
+                    </div>
+                </div>
+            </li>
+        </ul>
+
+        <ul class="list-unstyled">
+            <h4>Items</h4>
+            <div class="form-group">
+                <li ng-repeat="item in character.equipment.other" class="col-sm-6">
+                    <div class="row">
+                        <div class="col-sm-10">
+                            <label class="control-label">Item:</label>
+                            <textarea class="form-control" ng-model="item.desc" rows="3"></textarea>
+                        </div>
+                        <div class="col-sm-2 no-spinner">
+                            <label class="control-label">Weight:</label>
+                            <input type="number" class="form-control num-input-pad" ng-model="item.weight">
+                        </div>
+                    </div>
+                </li>
+            </div>
+        </ul>
+    </div>
+
+    <!--//==================================================================-->
+    <!--//-->
+    <!--//=================   SPELLS PANEL   ===============================-->
+    <!--//-->
+    <!--//==================================================================-->
+
+    <div role="tabpanel" class="tab-pane" id="spells">
+
+
+
     </div>
 </form>

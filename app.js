@@ -4,6 +4,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var passport = require('passport');
 var googleStrategy = require('passport-google-oauth20').Strategy;
+var LocalStrategy = require('passport-local').Strategy;
 var assert = require('assert');
 var mongoose = require('mongoose');
 var flash = require('connect-flash');
@@ -18,14 +19,20 @@ var port = process.env.PORT || 3000;
 var googleClientId = process.env.GOOGLE_CLIENT_ID || '404489463501-2g87o9spt6inbprcdv7n62qqkf0qgceh.apps.googleusercontent.com';
 var googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || 'xK7Eur_LYPEL7bEhlYTeT2jE';
 
-//mongoose
+//=== mongoose ===
 var userSchema = mongoose.Schema({
-    googleId: String,
-    name: String,
-    email: String,
-    token: String,
+    username: String,
+	nickname: String,
+	password: String,
     userLevel: String
 });
+
+userSchema.methods.validPassword = function(password){
+	if (password == this.password)
+		return true;
+	else
+		return false;
+};
 var User = mongoose.model('User', userSchema);
 
 var drawingSchema = mongoose.Schema({
@@ -38,75 +45,92 @@ var Drawing = mongoose.model('Drawing', drawingSchema);
 var characterSchema = mongoose.Schema({
     userId: String,
     info: {
-		level: {type: Number, default: 1},
-		xp: {type: Number, default: 0},
-		name: String,
-		race: String,
-		class: String,
-		background: String,
-		alignment: String,
-		traits: String,
-		ideals: String,
-		bonds: String,
-		flaws: String,
-		backstory: String,
-		notes: {type: String, default: ""}
+		'level': {type: Number, default: 1},
+		'xp': {type: Number, default: 0},
+		'name': String,
+		'race': String,
+		'class': String,
+		'background': String,
+		'alignment': String,
+		'traits': String,
+		'ideals': String,
+		'bonds': String,
+		'flaws': String,
+		'backstory': String,
+		'notes': {type: String, default: ""},
+		'appearance': {
+			'age': Number,
+			'height': String,
+			'weight': String,
+			'eyes': String,
+			'skin': String,
+			'hair': String
+		}
 	},
 	stats: {
-		str: Number,
-		dex: Number,
-		con: Number,
-		int: Number,
-		wis: Number,
-		cha: Number,
-		proficiency: Number,
-		speed: Number,
-		ac: Number,
-		initiative: Number,
-		inspiration: Number,
-		hp: Number,
-		hpMax: Number,
-		hpTemp: Number,
-		hitDie: {type: Number, default: 1},
-		hitDieType: Number,
-		hitDieMax: {type: Number, default: 1},
-		saves: {
-			str: {'prof': Boolean, 'save': Number},
-			dex: {'prof': Boolean, 'save': Number},
-			con: {'prof': Boolean, 'save': Number},
-			int: {'prof': Boolean, 'save': Number},
-			wis: {'prof': Boolean, 'save': Number},
-			cha: {'prof': Boolean, 'save': Number}
+		'str': Number,
+		'dex': Number,
+		'con': Number,
+		'int': Number,
+		'wis': Number,
+		'cha': Number,
+		'proficiency': Number,
+		'speed': Number,
+		'inspiration': Number,
+		'hp': Number,
+		'hpMax': Number,
+		'hpTemp': Number,
+		'hitDie': {type: Number, default: 1},
+		'hitDieType': String,
+		'hitDieMax': {type: Number, default: 1},
+		'saves': {
+			'str': Boolean,
+			'dex': Boolean,
+			'con': Boolean,
+			'int': Boolean,
+			'wis': Boolean,
+			'cha': Boolean
 		},
-		skills: {
-			acrobatics: {'prof': Boolean, 'skill': Number},
-			animalHandling: {'prof': Boolean, 'skill': Number},
-			arcana: {'prof': Boolean, 'skill': Number},
-			athletics: {'prof': Boolean, 'skill': Number},
-			deception: {'prof': Boolean, 'skill': Number},
-			history: {'prof': Boolean, 'skill': Number},
-			insight: {'prof': Boolean, 'skill': Number},
-			intimidation: {'prof': Boolean, 'skill': Number},
-			investigation: {'prof': Boolean, 'skill': Number},
-			medicine: {'prof': Boolean, 'skill': Number},
-			nature: {'prof': Boolean, 'skill': Number},
-			perception: {'prof': Boolean, 'skill': Number},
-			performance: {'prof': Boolean, 'skill': Number},
-			persuasion: {'prof': Boolean, 'skill': Number},
-			religion: {'prof': Boolean, 'skill': Number},
-			sleightOfHand: {'prof': Boolean, 'skill': Number},
-			stealth: {'prof': Boolean, 'skill': Number},
-			survival: {'prof': Boolean, 'skill': Number}
+		'skills': {
+			'acrobatics': Boolean,
+			'animalHandling': Boolean,
+			'arcana': Boolean,
+			'athletics': Boolean,
+			'deception': Boolean,
+			'history': Boolean,
+			'insight': Boolean,
+			'intimidation': Boolean,
+			'investigation': Boolean,
+			'medicine': Boolean,
+			'nature': Boolean,
+			'perception': Boolean,
+			'performance': Boolean,
+			'persuasion': Boolean,
+			'religion': Boolean,
+			'sleightOfHand': Boolean,
+			'stealth': Boolean,
+			'survival': Boolean
 		},
-		passivePerception: Number
+		'passivePerception': Number
 	},
-	abilities: {'name': String, 'desc': String},
+	feats: String,
+	abilities: [{'name': String, 'desc': String}],
 	equipment: {
-		armour: [{'equipped': Boolean, 'ac': Number, 'desc': String, 'weight': Number}],
-		weapons: [{'equipped': Boolean, 'isRanged': Boolean, 'range': Number, 'dmg': String, 'dmgType': String, 'isVersatile': Boolean, 'dmgVersatile': String, 'desc': String, 'weight': Number}],
-		other: [String]
+		'armour': [{'name': String, 'equipped': Boolean, 'ac': Number, 'type': String, 'str': Number, 'desc': String, 'weight': Number}],
+		'weapons': [{'name': String, 'equipped': Boolean, 'proficiency': Boolean, 'isRanged': Boolean, 'range': String, 'dmg': String, 'dmgType': String, 'isVersatile': Boolean, 'dmgVersatile': String, 'finesse': Boolean, 'desc': String, 'weight': Number}],
+		'other': [{'desc':String, 'weight': 0}],
+		'coin': {
+			'pp': Number,
+			'gp': Number,
+			'sp': Number,
+			'cp': Number
+		}
 	},
-	spells: [String],
+	spells: {
+		'saveDC': Number,
+		'mod': Number,
+		'spellList': [String]
+	},
 	deathSaves: {'successes': Number, 'failures': Number}
 });
 var Character = mongoose.model('Character', characterSchema);
@@ -141,45 +165,61 @@ passport.deserializeUser(function(id, done){
     });
 });
 
-passport.use(new googleStrategy({
-    clientID: googleClientId,
-    clientSecret: googleClientSecret,
-    callbackURL: "http://localhost:3000/auth/google/return"
-  }, function (token, refreshToken, profile, done) {
-    process.nextTick(function () {
-        User.findOne({'googleId': profile.id}, function (err, user) {
-            if (err){
-               return done(err);
-            }
-            if (user){
-                return done(null, user);
-            }else {
-                var newUser = new User();
+//google auth
+// passport.use(new googleStrategy({
+//     clientID: googleClientId,
+//     clientSecret: googleClientSecret,
+//     callbackURL: "http://localhost:25565/auth/google/return"
+//   }, function (token, refreshToken, profile, done) {
+//     process.nextTick(function () {
+//         User.findOne({'googleId': profile.id}, function (err, user) {
+//             if (err){
+//                return done(err);
+//             }
+//             if (user){
+//                 return done(null, user);
+//             }else {
+//                 var newUser = new User();
+//
+// 				if (profile.displayName == 'Ben Allan')
+// 					newUser.userLevel = 'admin';
+// 				else
+// 					newUser.userLevel = 'user';
+//
+//                 newUser.googleId = profile.id;
+//                 newUser.token = token;
+//                 newUser.name = profile.displayName;
+//                 newUser.email = profile.emails[0].value;
+//
+//                 newUser.save(function (err) {
+//                     if (err){
+//                         throw err;
+//                     }
+//                     return done(null, newUser);
+//                 });
+//             }
+//         });
+//     });
+//   }
+// ));
+// app.get('/auth/google', passport.authenticate('google', {scope: ['profile', 'email'] }));
+// app.get('/auth/google/return', passport.authenticate('google', { failureRedirect: '/', successRedirect: '/draw'}));
 
-				if (profile.displayName == 'Ben Allan')
-					newUser.userLevel = 'admin';
-				else
-					newUser.userLevel = 'user';
-
-                newUser.googleId = profile.id;
-                newUser.token = token;
-                newUser.name = profile.displayName;
-                newUser.email = profile.emails[0].value;
-
-                newUser.save(function (err) {
-                    if (err){
-                        throw err;
-                    }
-                    return done(null, newUser);
-                });
-            }
-        });
-    });
-  }
+//local auth
+passport.use(new LocalStrategy(
+	function (username, password, done) {
+		User.findOne({username: username}, function (err, user) {
+			if (err)
+				return done(err);
+			if (!user)
+				return done(null, false, {message: 'Incorrect username'});
+			if (!user.validPassword(password))
+				return done(null, false, {message: 'Incorrect password'});
+			return done(null, user);
+		});
+	}
 ));
-app.get('/auth/google', passport.authenticate('google', {scope: ['profile', 'email'] }));
-
-app.get('/auth/google/return', passport.authenticate('google', { failureRedirect: '/', successRedirect: '/draw'}));
+app.post('/login/auth', passport.authenticate('local', {successRedirect: '/draw', failureRedirect: '/'}));
 
 app.get('/auth/loggedin', function (req, res) {
     var authenticated = req.isAuthenticated();
@@ -229,18 +269,21 @@ app.post('/drawing/save', isLoggedIn, isAdmin, function (req, res) {
 
 //character controllers
 app.post('/char/save', isLoggedIn, function (req, res) {
-	console.log(req.body);
-	Character.findOne({'userId': req.user.id, 'id': req.body.character.id}, function (err, character) {
+	Character.findOne({'id': req.body.character.id}, function (err, character) {
 		if (err){
 			res.send(err);
 			return;
 		}
 		if (character){
-			character.update(req.body.character);
-			res.send('character updated!');
+			Character.update(req.body.character.id, { $set: req.body.character}, {overwrite: true}, function (err, char) {
+				if (err)
+					res.send(err);
+				else
+					res.send('character updated!');
+			});
 		} else {
 			var newCharacter = new Character(req.body.character);
-
+			newCharacter.userId = req.user.id;
 			newCharacter.save(function (err) {
 				if (err)
 					throw err;
@@ -251,7 +294,7 @@ app.post('/char/save', isLoggedIn, function (req, res) {
 });
 
 app.get('/char/get/:id', isLoggedIn, function (req, res){
-	Character.findById(req.params.id, function (err, character) {
+	Character.findOne({_id: req.params.id}, function (err, character) {
 		if (err){
 			res.send(err);
 			return;
@@ -263,7 +306,7 @@ app.get('/char/get/:id', isLoggedIn, function (req, res){
 	});
 });
 app.get('/char/getall/', isLoggedIn, isAdmin, function (req, res) {
-	Character.find({}, 'id name', function (err, characters){
+	Character.find({}, {id: 1, info: 1}, function (err, characters){
 		if (err){
 			res.send(err);
 			return;
@@ -275,7 +318,7 @@ app.get('/char/getall/', isLoggedIn, isAdmin, function (req, res) {
 	});
 });
 app.get('/char/getuserchars/', isLoggedIn, function (req, res) {
-	Character.find({'userId': req.user.id}, 'id name', function (err, characters){
+	Character.find({'userId': req.user.id}, {id: 1, info: 1}, function (err, characters){
 		if (err){
 			res.send(err);
 			return;

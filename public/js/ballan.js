@@ -1,7 +1,7 @@
 /**
  * Created by Ben on 4/18/2016.
  */
-var ballan = angular.module('ballan', ['btford.socket-io']);
+var ballan = angular.module('ballan', ['btford.socket-io', 'rzModule', 'color.picker']);
 
 ballan.config(['$httpProvider', function($httpProvider){
 	$httpProvider.defaults.useXDomain = true;
@@ -11,11 +11,22 @@ ballan.config(['$httpProvider', function($httpProvider){
 	$httpProvider.defaults.headers.common["Content-Type"] = "application/json";
 }]);
 
-ballan.directive('drawingBoard', ['socket', 'loginFactory', 'drawingFactory', '$rootScope', function (socket, loginFactory, drawingFactory, $rootScope) {
+ballan.directive('drawingBoard', ['socket', 'loginFactory', 'drawingFactory', function (socket, loginFactory, drawingFactory) {
 	return {
+		scope: true,
 		templateUrl: 'partials/drawing.html',
 		link: function (scope) {
-			var sketcher = atrament('#mySketcher');
+			var sketcher = atrament('#mySketcher', 700, 500);
+			scope.sketcherColor = '#000000';
+			scope.sketcherWeight = 3;
+
+			scope.$watch('sketcherColor', function (newVal) {
+				sketcher.color = newVal;
+			});
+			scope.$watch('sketcherWeight', function (newVal) {
+				sketcher.weight = parseInt(newVal);
+			});
+
 			var dataURL = function () {
 				return sketcher.toImage();
 			};
@@ -29,11 +40,20 @@ ballan.directive('drawingBoard', ['socket', 'loginFactory', 'drawingFactory', '$
 				sketcher.clear();
 				socket.emit('sendDrawing', dataURL());
 			};
+			scope.erase = function () {
+				sketcher.mode = 'erase';
+				scope.drawMode = true;
+			};
+			scope.draw = function () {
+				sketcher.mode = 'draw';
+				scope.drawMode = false;
+			};
+
 			loginFactory.userLevel().success(function(response){
 				if (response == 'admin')
-					$rootScope.admin = true;
+					scope.admin = true;
 				else
-					$rootScope.admin = false;
+					scope.admin = false;
 			});
 			scope.save = function(){
 				drawingFactory.saveDrawing(scope.saveAs, dataURL());
@@ -54,31 +74,147 @@ ballan.directive('myHeader', ['loginFactory', function (loginFactory) {
 	}
 }]);
 
-ballan.directive('characterSheet', ['charFactory', '$rootScope', function(charFactory, $rootScope){
+ballan.directive('loginPage', ['$http', function ($http) {
 	return {
 		scope: {},
+		templateUrl: 'partials/login.html',
+		link: function (scope) {
+			
+		}
+	}
+}]);
+
+ballan.directive('characterSheet', ['charFactory', 'loginFactory', function(charFactory, loginFactory){
+	return {
+		scope: true,
 		templateUrl: 'partials/characterSheet.html',
 		link: function (scope) {
-			if ($rootScope.admin == true)
-				scope.characterList = charFactory.getChars();
-			else 
-				scope.characterList = charFactory.getUserChars();
-
-			scope.charId = 0;
-			scope.character = charFactory.getChar(scope.charId);
-			scope.character.info = {};
-			scope.character.info.level = 11;
-
-			
-			scope.updateChar = function(){
-				charFactory.saveChar(scope.character);
+			loginFactory.userLevel().success(function (response) {
+				if (response == 'admin') {
+					charFactory.getChars().success(function (response) {
+						scope.characterList = response;
+					});
+				} else {
+					charFactory.getUserChars().success(function (response) {
+						scope.characterList = response;
+					});
+				}
+			});
+			scope.newCharacter = {
+				info: {
+					'level': 1,
+					'xp': 0,
+					'name': '',
+					'race': '',
+					'class': '',
+					'background': '',
+					'alignment': '',
+					'traits': '',
+					'ideals': '',
+					'bonds': '',
+					'flaws': '',
+					'backstory': '',
+					'notes': '',
+					'appearance': {
+						'age': 0,
+						'height': '',
+						'weight': '',
+						'eyes': '',
+						'skin': '',
+						'hair': ''
+					}
+				},
+				stats: {
+					'str': 0,
+					'dex': 0,
+					'con': 0,
+					'int': 0,
+					'wis': 0,
+					'cha': 0,
+					'proficiency': 2,
+					'speed': 0,
+					'inspiration': 0,
+					'hp': 0,
+					'hpMax': 0,
+					'hpTemp': 0,
+					'hitDie': 1,
+					'hitDieType': '',
+					'hitDieMax': 1,
+					'saves': {
+						'str': false,
+						'dex': false,
+						'con': false,
+						'int': false,
+						'wis': false,
+						'cha': false
+					},
+					'skills': {
+						'acrobatics': false,
+						'animalHandling': false,
+						'arcana': false,
+						'athletics': false,
+						'deception': false,
+						'history': false,
+						'insight': false,
+						'intimidation': false,
+						'investigation': false,
+						'medicine': false,
+						'nature': false,
+						'perception': false,
+						'performance': false,
+						'persuasion': false,
+						'religion': false,
+						'sleightOfHand': false,
+						'stealth': false,
+						'survival': false
+					}
+				},
+				feats: '',
+				abilities: [],
+				equipment: {
+					'armour': [],
+					'weapons': [],
+					'other': [],
+					'coin': {
+						'pp': 0,
+						'gp': 0,
+						'sp': 0,
+						'cp': 0
+					}
+				},
+				spells: {
+					'saveDC': Number,
+					'mod': Number,
+					'spellList': [String]
+				},
+					deathSaves: {'successes': 0, 'failures': 0}
 			};
+			scope.character = scope.newCharacter;
 
-			//calculate skill modifiers
-			scope.character.equipment = {};
-			scope.character.equipment.armour = [{'equipped': true, 'ac': 3, 'desc': "some test armour", 'weight': 5},{'equipped': false, 'ac': 5, 'desc': "some other armour", 'weight': 15}];
-			scope.skillMod = function (skill) {
-				switch(skill){
+			scope.selectChar = function (charId) {
+				if (charId == 0) {
+					scope.character = scope.newCharacter;
+				} else {
+					charFactory.getChar(charId).success(function (response) {
+						scope.character = response;
+					});
+				}
+			};
+			scope.checkSaveProf = function (ability) {
+				if (scope.character.stats.saves[ability])
+					return scope.character.stats.proficiency;
+				else
+					return 0;
+			};
+			scope.checkSkillProf = function (ability) {
+				if (scope.character.stats.skills[ability])
+					return scope.character.stats.proficiency;
+				else
+					return 0;
+			};
+			
+			scope.abilityMod = function (ability) {
+				switch(ability){
 					case 1:
 						return -5;
 					case 2:
@@ -127,17 +263,114 @@ ballan.directive('characterSheet', ['charFactory', '$rootScope', function(charFa
 						return 10;
 				}
 			};
-
-		}
-	}
-}]);
-
-ballan.directive('newCharacterSheet', ['charFactory', function (charFactory) {
-	return {
-		scope: {},
-		templateUrl: 'partials/newCharacterSheet.html',
-		link: function (scope) {
+			scope.passivePerception = function () {
+				return 10 + scope.abilityMod(scope.character.stats.wis) + scope.checkSkillProf('perception');
+			};
 			
+			scope.newArmour = function () {
+				scope.character.equipment.armour.push({'name': '', 'equipped': false, 'ac': 0, 'type': 'light', 'str': 0, 'desc': '', 'weight': 0});
+			};
+			scope.newWeapon = function () {
+				scope.character.equipment.weapons.push({'name': '', 'equipped': false, 'proficiency': true, 'isRanged': false, 'range': '', 'dmg': '', 'dmgType': '', 'isVersatile': false, 'dmgVersatile': '', 'finesse': false, 'desc': '', 'weight': 0})
+			};
+			scope.newItem = function () {
+				scope.character.equipment.other.push({'desc': '', 'weight': 0});
+			};
+
+			scope.newAbility = function () {
+				scope.character.abilities.push({'name': '', 'desc': ''})
+			};
+
+			scope.equippedArmour = {'name': '', 'equipped': false, 'ac': 0, 'type': 'light', 'str': 0, 'desc': '', 'weight': 0};
+
+			scope.armourEquip = function(pos, list){
+				angular.forEach(list, function (armour, index) {
+					if (pos != index)
+						armour.equipped = false;
+					if (pos == index)
+						scope.equippedArmour = armour;
+				});
+			};
+
+			scope.ac = function () {
+				var ac = scope.equippedArmour.ac;
+				if (scope.equippedArmour.type != 'heavy'){
+					if (scope.equippedArmour.type != 'medium'){
+						return ac + scope.abilityMod(scope.character.stats.dex);
+					} else {
+						return ac + Math.min(scope.abilityMod(scope.character.stats.dex), 2);
+					}
+				} else{
+					return ac;
+				}
+			};
+
+			scope.totalWeight = function () {
+				var totalWeight = 0;
+				angular.forEach(scope.character.equipment.armour, function (armour) {
+					totalWeight = totalWeight + armour.weight;
+				});
+				angular.forEach(scope.character.equipment.weapons, function (weapon) {
+					totalWeight = totalWeight + weapon.weight;
+				});
+				angular.forEach(scope.character.equipment.other, function (item) {
+					totalWeight = totalWeight + item.weight;
+				});
+				return totalWeight;
+			};
+
+			scope.attacks = function (weapon) {
+				var toHit;
+				if (weapon.proficiency) {
+					if (weapon.isRanged) {
+					toHit = scope.abilityMod(scope.character.stats.dex) + scope.character.stats.proficiency;
+					return 'To Hit: ' + toHit + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType + ' Range: ' + weapon.range;
+					}
+					else {
+						if (weapon.finesse){
+							if (weapon.isVersatile) {
+								toHit = scope.abilityMod(scope.character.stats.dex) + scope.character.stats.proficiency;
+								return 'To Hit: ' + toHit + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType + ' Versatile Dmg: ' + weapon.dmgVersatile;
+							}else {
+								toHit = scope.abilityMod(scope.character.stats.dex) + scope.character.stats.proficiency;
+								return 'To Hit: ' + toHit + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType;
+							}
+						} else {
+							if (weapon.isVersatile) {
+								toHit = scope.abilityMod(scope.character.stats.str) + scope.character.stats.proficiency;
+								return 'To Hit: ' + toHit + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType + ' Versatile Dmg: ' + weapon.dmgVersatile;
+							}else {
+								toHit = scope.abilityMod(scope.character.stats.str) + scope.character.stats.proficiency;
+								return 'To Hit: ' + toHit + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType;
+							}
+						}
+					}
+				} else {
+					if (weapon.isRanged) {
+					return 'To Hit: ' + scope.abilityMod(scope.character.stats.dex) + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType + ' Range: ' + weapon.range;
+					}
+					else {
+						if (weapon.finesse){
+							if (weapon.isVersatile) {
+								return 'To Hit: ' + scope.abilityMod(scope.character.stats.dex) + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType + ' Versatile Dmg: ' + weapon.dmgVersatile;
+							}else {
+								return 'To Hit: ' + scope.abilityMod(scope.character.stats.dex) + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType;
+							}
+						} else {
+							if (weapon.isVersatile) {
+								return 'To Hit: ' + scope.abilityMod(scope.character.stats.str) + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType + ' Versatile Dmg: ' + weapon.dmgVersatile;
+							}else{
+								return 'To Hit: ' + scope.abilityMod(scope.character.stats.str) + ' Damage: ' + weapon.dmg + ' ' + weapon.dmgType;
+							}
+						}
+					}
+				}
+
+			};
+			
+			scope.updateChar = function(){
+				charFactory.saveChar(scope.character);
+			};
 		}
 	}
 }]);

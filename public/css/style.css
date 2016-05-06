@@ -5,6 +5,10 @@
     appearance: none;
     margin: 0;
 }
+.no-spinner input[type=number] {
+    -moz-appearance: textfield;
+}
+
 .form-control[readonly]{
     background-color: white;
 }
@@ -29,7 +33,54 @@
     padding: 6px 6px 6px 9px;
 }
 .seperator{
-    height: 59px;
     border-bottom: 1px solid #e3e3e3;
     padding-top: 6px;
+}
+.no-hover>a:hover,
+.no-hover>a:focus{
+    background-color: white !important;
+    border-bottom: #333;
+}
+
+.new-item>a:focus,
+.new-item>a:active{
+    background-color: white !important;
+    color: #337ab7;
+}
+.prof-padding{
+    padding-top: 0 !important;
+}
+.no-bottom-margin{
+    margin-bottom: 0 !important;
+}
+.coinage {
+    border-bottom: 1px solid #e3e3e3;
+    padding-bottom: 10px;
+}
+.hp-line {
+    border-bottom: 2px solid black;
+}
+.hp-line>input{
+    margin-bottom: 3px;
+    padding: 2px 2px 2px 2px;
+    font-size: 18px;
+    text-align: center;
+}
+.max-hp{
+    font-weight: bold;
+    font-size: 18px;
+    align-self: center;
+    text-align: center;
+}
+.temp-hp{
+    margin-bottom: 3px;
+    padding: 2px 2px 2px 2px;
+    font-size: 18px;
+    text-align: center;
+}
+.ability-list{
+    padding-bottom: 10px;
+}
+.sketcher-canvas{
+    border: 1px solid #e3e3e3;
 }
