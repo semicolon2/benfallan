@@ -84,3 +84,9 @@
 .sketcher-canvas{
     border: 1px solid #e3e3e3;
 }
+.item-remove{
+    font-weight: bold;
+    padding: 2px 2px 2px 2px;
+    font-size: 18px;
+    text-align: center;
+}

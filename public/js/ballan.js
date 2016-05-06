@@ -183,9 +183,10 @@ ballan.directive('characterSheet', ['charFactory', 'loginFactory', function(char
 					}
 				},
 				spells: {
-					'saveDC': Number,
-					'mod': Number,
-					'spellList': [String]
+					'speddAbility': '',
+					'saveDC': 0,
+					'mod': 0,
+					'spellList': []
 				},
 					deathSaves: {'successes': 0, 'failures': 0}
 			};
@@ -277,8 +278,21 @@ ballan.directive('characterSheet', ['charFactory', 'loginFactory', function(char
 				scope.character.equipment.other.push({'desc': '', 'weight': 0});
 			};
 
+			scope.removeArmour = function (index) {
+				scope.character.equipment.armour.splice(index, 1)
+			};
+			scope.removeWeapon = function (index) {
+				scope.character.equipment.weapons.splice(index, 1)
+			};
+			scope.removeItem = function (index) {
+				scope.character.equipment.other.splice(index, 1)
+			};
+
 			scope.newAbility = function () {
 				scope.character.abilities.push({'name': '', 'desc': ''})
+			};
+			scope.removeAbility = function (index) {
+				scope.character.abilities.splice(index, 1)
 			};
 
 			scope.equippedArmour = {'name': '', 'equipped': false, 'ac': 0, 'type': 'light', 'str': 0, 'desc': '', 'weight': 0};
